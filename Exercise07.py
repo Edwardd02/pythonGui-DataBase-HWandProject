@@ -268,7 +268,7 @@ class Ui_MainWindow(object):
 
     def connect(self):
         self.cnx = mysql.connector.connect(user = "root",
-                                           password = "222488842dahy",
+                                           password = "TODO: Add your password here",
                                            host = "127.0.0.1",
                                            database = "homework04")
     def refresh(self):
