@@ -113,12 +113,12 @@
         <widget class="QTableWidget" name="tblExpenses">
          <column>
           <property name="text">
-           <string>New Column</string>
+           <string>Expense ID</string>
           </property>
          </column>
          <column>
           <property name="text">
-           <string>Category ID</string>
+           <string>Category</string>
           </property>
          </column>
          <column>
@@ -160,7 +160,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="BtnDeleteExpenses">
+          <widget class="QPushButton" name="btnDeleteExpenses">
            <property name="text">
             <string>Delete</string>
            </property>

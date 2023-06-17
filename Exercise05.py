@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+from PyQt5.QtCore import QDate
 
 # Form implementation generated from reading ui file '.\Exercise05.ui'
 #
@@ -122,7 +123,7 @@ class Ui_Dialog(object):
 
         self.txtExpenseID.setText(self.listValues[0])
         self.cmbCategory.setCurrentText(self.listValues[1])
-        self.dateEdit.setDate(self.listValues[2])
+        self.dateEdit.setDate(QDate.fromString(self.listValues[2], "yyyy-MM-dd"))
         self.txtExpense.setText(self.listValues[3])
         self.txtAmount.setText(self.listValues[4])
         self.txtNotes.setText(self.listValues[5])
@@ -155,7 +156,7 @@ class Ui_Dialog(object):
 
     def connect(self):
         self.cnx = mysql.connector.connect(user="root",
-                                           password="222488842dahy",
+                                           password="ljt916159807",
                                            host="127.0.0.1",
                                            database="homework04")
 
