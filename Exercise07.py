@@ -374,6 +374,15 @@ class Ui_MainWindow(object):
 
     def deleteCategories(self, a_ID):
         # Deletes a category from the database
+        # Check if the category is used in any expenses
+        cursor = self.execute_query("Select * from Expenses Where category_ID = %s", [a_ID])
+        expense = cursor.fetchone()
+
+        if expense is not None:
+            QMessageBox.warning(None, "Cannot Delete",
+                                "This category is currently being used in expenses and cannot be deleted.")
+            return
+
         cursor = self.execute_query("Delete from Categories Where category_ID = %s", [a_ID])
         self.commit_and_close(cursor)
 
