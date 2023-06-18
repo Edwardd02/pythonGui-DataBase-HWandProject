@@ -217,6 +217,8 @@ class Ui_MainWindow(object):
 
             self.updateCategories(listValues)
             self.refreshCategories()
+            # Make sure the category in expense also change
+            self.refreshExpenses()
 
     def btnDeleteCategories_clicked(self):
         # Delete selected row
@@ -329,7 +331,7 @@ class Ui_MainWindow(object):
     def connect(self):
         # Connects to the database
         self.cnx = mysql.connector.connect(user="root",
-                                           password="222488842dahy",
+                                           password="ljt916159807",
                                            host="127.0.0.1",
                                            database="homework04")
 
