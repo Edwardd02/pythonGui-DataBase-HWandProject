@@ -89,7 +89,7 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.lblExpenseID.setText(_translate("Dialog", "Expense ID:"))
-        self.lblCategory.setText(_translate("Dialog", "Category ID:"))
+        self.lblCategory.setText(_translate("Dialog", "Category:"))
         self.lblExpenseDate.setText(_translate("Dialog", "Expense date:"))
         self.lblAmount.setText(_translate("Dialog", "Amount:"))
         self.lblExpense.setText(_translate("Dialog", "Expense:"))
@@ -156,7 +156,7 @@ class Ui_Dialog(object):
 
     def connect(self):
         self.cnx = mysql.connector.connect(user="root",
-                                           password="ljt916159807",
+                                           password="222488842dahy",
                                            host="127.0.0.1",
                                            database="homework04")
 
@@ -176,7 +176,6 @@ class Ui_Dialog(object):
         if not rows:
             cursor.close()
             return
-        print(rows)
         self.setupComboBox(rows)
         # Process the data
 

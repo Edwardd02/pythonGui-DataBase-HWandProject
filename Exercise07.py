@@ -21,7 +21,7 @@ import mysql.connector
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
+categories = []
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -131,7 +131,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.twtMain.setCurrentIndex(1)
+        self.twtMain.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
         # Update UI Here
@@ -176,42 +176,35 @@ class Ui_MainWindow(object):
         self.setupEvents()
         self.setupDatabase()
 
-
     #############################################################
     #                                                           #
     #                          Events                           #
     #                                                           #
     #############################################################
     def setupEvents(self):
-        self.btnNewCategories.clicked.connect(self.btnNewCategories_clicked)
-        self.btnNewExpenses.clicked.connect(self.btnNewExpenses_clicked)
-        self.btnEditCategories.clicked.connect(self.btnEditCategories_clicked)
-        self.btnEditExpenses.clicked.connect(self.btnEditExpenses_clicked)
-        self.btnDeleteCategories.clicked.connect(self.btnDeleteCategories_clicked)
-        self.btnDeleteExpenses.clicked.connect(self.btnDeleteExpenses_clicked)
+        self.connectButtonClicked(self.btnNewCategories, self.btnNewCategories_clicked)
+        self.connectButtonClicked(self.btnNewExpenses, self.btnNewExpenses_clicked)
+        self.connectButtonClicked(self.btnEditCategories, self.btnEditCategories_clicked)
+        self.connectButtonClicked(self.btnEditExpenses, self.btnEditExpenses_clicked)
+        self.connectButtonClicked(self.btnDeleteCategories, self.btnDeleteCategories_clicked)
+        self.connectButtonClicked(self.btnDeleteExpenses, self.btnDeleteExpenses_clicked)
+
+    def connectButtonClicked(self, button, slot):
+        button.clicked.connect(slot)
+
 
     # Functions for buttons in categories
     def btnNewCategories_clicked(self):
-        Dialog = QtWidgets.QDialog()
-        form = Exercise03.Ui_Dialog()
-        form.setupUi(Dialog, None)  # None -> no list, o need to send data when creating a new record
-        result = Dialog.exec_()
+        listValues = self.openDialog(Exercise03, None)
 
-        if result == 1:  # This means user clicked OK
-            # Get the list of results from the dialog
-            listValues = form.getValues()
-
-            # Insert in database
+        if listValues is not None:
             self.insertCategories(listValues)
-
-            # Requery
             self.refreshCategories()
 
     def btnEditCategories_clicked(self):
-        # Get data from the selected row
         currentRow = self.tblCategories.currentRow()
 
-        if currentRow == -1:  # No row selected
+        if currentRow == -1:
             QMessageBox.warning(None, "Select Row", "Please select row first")
             return
 
@@ -219,19 +212,10 @@ class Ui_MainWindow(object):
         listValues.append(self.tblCategories.item(currentRow, 0).text())
         listValues.append(self.tblCategories.item(currentRow, 1).text())
 
-        Dialog = QtWidgets.QDialog()
-        form = Exercise03.Ui_Dialog()
-        form.setupUi(Dialog, listValues)  # None -> no list, o need to send data when creating a new record
-        result = Dialog.exec_()
+        listValues = self.openDialog(Exercise03, listValues)
+        if listValues is not None:
 
-        if result == 1:  # This means user clicked OK
-            # Get the list of results from the dialog
-            listValues = form.getValues()
-
-            # Update in database
             self.updateCategories(listValues)
-
-            # Requery
             self.refreshCategories()
 
     def btnDeleteCategories_clicked(self):
@@ -260,28 +244,18 @@ class Ui_MainWindow(object):
             # Requery
             self.refreshCategories()
 
-    #
     def btnNewExpenses_clicked(self):
-        Dialog = QtWidgets.QDialog()
-        form = Exercise05.Ui_Dialog()
-        form.setupUi(Dialog, None)  # None -> no list, o need to send data when creating a new record
-        result = Dialog.exec_()
+        listValues = self.openDialog(Exercise05, None)
 
-        if result == 1:  # This means user clicked OK
-            # Get the list of results from the dialog
-            listValues = form.getValues()
-
-            # Insert in database
+        if listValues is not None:
             self.insertExpenses(listValues)
-
-            # Requery
             self.refreshExpenses()
 
+
     def btnEditExpenses_clicked(self):
-        # Get data from the selected row
         currentRow = self.tblExpenses.currentRow()
 
-        if currentRow == -1:  # No row selected
+        if currentRow == -1:
             QMessageBox.warning(None, "Select Row", "Please select row first")
             return
 
@@ -293,19 +267,10 @@ class Ui_MainWindow(object):
         listValues.append(self.tblExpenses.item(currentRow, 4).text())
         listValues.append(self.tblExpenses.item(currentRow, 5).text())
 
-        Dialog = QtWidgets.QDialog()
-        form = Exercise05.Ui_Dialog()
-        form.setupUi(Dialog, listValues)  # None -> no list, no need to send data when creating a new record
-        result = Dialog.exec_()
+        listValues = self.openDialog(Exercise05, listValues)
 
-        if result == 1:  # This means user clicked OK
-            # Get the list of results from the dialog
-            listValues = form.getValues()
-
-            # Update in database
+        if listValues is not None:
             self.updateExpenses(listValues)
-
-            # Requery
             self.refreshExpenses()
 
     def btnDeleteExpenses_clicked(self):
@@ -334,6 +299,20 @@ class Ui_MainWindow(object):
             # Requery
             self.refreshExpenses()
 
+    def refreshCategoriesComboBox(self):
+        exercise05_ui = Exercise05.Ui_Dialog()
+        exercise05_ui.setupComboBox(categories)
+
+    def openDialog(self, dialogClass, listValues):
+        Dialog = QtWidgets.QDialog()
+        form = dialogClass.Ui_Dialog()
+        form.setupUi(Dialog, listValues)
+        result = Dialog.exec_()
+
+        if result == 1:
+            return form.getValues()
+
+        return None
     #############################################################
     #                                                           #
     #                          Database                         #
@@ -341,97 +320,66 @@ class Ui_MainWindow(object):
     #############################################################
 
     def setupDatabase(self):
+        # Establishes the connection and refreshes category and expense data
         self.connect()
         self.refreshCategories()
         self.refreshExpenses()
 
     def connect(self):
-        self.cnx = mysql.connector.connect(user = "root",
-                                           password = "ljt916159807",
-                                           host = "127.0.0.1",
-                                           database = "homework04")
+        # Connects to the database
+        self.cnx = mysql.connector.connect(user="root",
+                                           password="222488842dahy",
+                                           host="127.0.0.1",
+                                           database="homework04")
+
+    def execute_query(self, query, values=None):
+        # Creates a cursor, executes a query, and then returns the cursor
+        cursor = self.cnx.cursor()
+        cursor.execute(query, values)
+        return cursor
+
+    def commit_and_close(self, cursor):
+        # Commits any changes and closes the cursor
+        self.cnx.commit()
+        cursor.close()
+
     def refreshCategories(self):
-        # Empty table view
+        # Refreshes the categories view by clearing the table and inserting the new data
         self.tblCategories.setRowCount(0)
 
-        cursor = self.cnx.cursor()
+        cursor = self.execute_query("Select * From Categories")
 
-        query = "Select * From Categories"
-
-        cursor.execute(query)
-
-        for(category_ID, category) in cursor:  # Field ames in DB
-            # Insert values in GUI table
+        for (category_ID, category) in cursor:  # Field names in DB
             rowCount = self.tblCategories.rowCount()
             self.tblCategories.insertRow(rowCount)
             self.tblCategories.setItem(rowCount, 0, QTableWidgetItem(str(category_ID)))
             self.tblCategories.setItem(rowCount, 1, QTableWidgetItem(category))
 
-        cursor.close()
-
+        self.commit_and_close(cursor)
 
     def insertCategories(self, a_listValues):
-        cursor = self.cnx.cursor()
-
-        query = ("Insert Into Categories "
-                 "(category)"
-                 "Values (%s)")
-
-        values = (a_listValues[1], )
-
-        cursor.execute(query, values)
-
-        # Make sure data is committed to the database
-        self.cnx.commit()
-
-        cursor.close()
+        # Inserts a new category into the database
+        cursor = self.execute_query("Insert Into Categories (category) Values (%s)", (a_listValues[1],))
+        self.commit_and_close(cursor)
 
     def updateCategories(self, a_listValues):
-        cursor = self.cnx.cursor()
-
-        query = ("Update Categories "
-                 "Set category = %s"
-                 "Where category_ID = %s")
-
-        a_listValues = [a_listValues[1], a_listValues[0]]
-        values = a_listValues
-
-        cursor.execute(query, values)
-
-        # Make sure data is committed to the database
-        self.cnx.commit()
-
-        cursor.close()
+        # Updates an existing category in the database
+        cursor = self.execute_query("Update Categories Set category = %s Where category_ID = %s",
+                                    [a_listValues[1], a_listValues[0]])
+        self.commit_and_close(cursor)
 
     def deleteCategories(self, a_ID):
-        cursor = self.cnx.cursor()
-
-        query = ("Delete from Categories "
-                 "Where category_ID = %s")
-
-        values = []
-        values.append(a_ID)
-        cursor.execute(query, values)
-
-        # Make sure data is committed to the database
-        self.cnx.commit()
-
-        cursor.close()
+        # Deletes a category from the database
+        cursor = self.execute_query("Delete from Categories Where category_ID = %s", [a_ID])
+        self.commit_and_close(cursor)
 
     def refreshExpenses(self):
-        # Empty table view
+        # Refreshes the expenses view by clearing the table and inserting the new data
         self.tblExpenses.setRowCount(0)
 
-        cursor = self.cnx.cursor()
+        cursor = self.execute_query("Select * from Expenses")
 
-        query = "Select e.expense_ID, c.category, e.expense_date, e.expense, e.amount, e.notes " \
-                "From Expenses e " \
-                "Join Categories c on e.category_ID = c.category_ID"
-
-        cursor.execute(query)
-
-        for (expense_ID, category, expense_date, expense, amount, notes) in cursor:  # Field names in DB
-            # Insert values in GUI table
+        for (expense_ID, category, expense_date, expense, amount, notes) in cursor:
             rowCount = self.tblExpenses.rowCount()
             self.tblExpenses.insertRow(rowCount)
             self.tblExpenses.setItem(rowCount, 0, QTableWidgetItem(str(expense_ID)))
@@ -441,76 +389,42 @@ class Ui_MainWindow(object):
             self.tblExpenses.setItem(rowCount, 4, QTableWidgetItem(str(amount)))
             self.tblExpenses.setItem(rowCount, 5, QTableWidgetItem(notes))
 
-
-        cursor.close()
+        self.commit_and_close(cursor)
 
     def insertExpenses(self, a_listValues):
+        # Inserts a new expense into the database
         category_id = self.getCategoryID(a_listValues)
-
-        cursor = self.cnx.cursor()
-
-        query = ("Insert Into Expenses "
-                 "(category_ID, expense_date, expense, amount, notes)"
-                 "Values (%s, %s, %s, %s, %s )")
-
-        values = (category_id, a_listValues[2], a_listValues[3], a_listValues[4], a_listValues[5])
-
-        cursor.execute(query, values)
-
-        # Make sure data is committed to the database
-        self.cnx.commit()
-
-        cursor.close()
+        cursor = self.execute_query(
+            "Insert Into Expenses (category_ID, expense_date, expense, amount, notes) Values (%s, %s, %s, %s, %s )",
+            (category_id, a_listValues[2], a_listValues[3], a_listValues[4], a_listValues[5]))
+        self.commit_and_close(cursor)
 
     def updateExpenses(self, a_listValues):
+        # Updates an existing expense in the database
         category_id = self.getCategoryID(a_listValues)
-
-        cursor = self.cnx.cursor()
-
-        query = ("Update Expenses "
-                 "Set category_ID = %s, expense_date = %s, expense = %s, amount = %s, notes = %s"
-                 "Where expense_ID = %s")
-
-        values = (category_id, a_listValues[2], a_listValues[3], a_listValues[4], a_listValues[5], a_listValues[0])
-
-        cursor.execute(query, values)
-
-        # Make sure data is committed to the database
-        self.cnx.commit()
-
-        cursor.close()
+        cursor = self.execute_query(
+            "Update Expenses Set category_ID = %s, expense_date = %s, expense = %s, amount = %s, notes = %s Where expense_ID = %s",
+            (category_id, a_listValues[2], a_listValues[3], a_listValues[4], a_listValues[5], a_listValues[0]))
+        self.commit_and_close(cursor)
 
     def getCategoryID(self, a_listValues):
-        cursor = self.cnx.cursor()
-
-        # Get the correct category_ID for the given category name
-        category_name = a_listValues[1]
-        query = "Select category_ID From Categories Where category = %s"
-        cursor.execute(query, (category_name,))
+        # Returns the ID of a category based on its name
+        cursor = self.execute_query("Select category_ID From Categories Where category = %s", (a_listValues[1],))
         result = cursor.fetchone()
         category_id = result[0]
-
         cursor.close()
 
         return category_id
 
     def deleteExpenses(self, a_ID):
-        cursor = self.cnx.cursor()
+        # Deletes an expense from the database
+        cursor = self.execute_query("Delete from  Expenses Where expense_ID = %s", [a_ID])
+        self.commit_and_close(cursor)
 
-        query = ("Delete from  Expenses "
-                 "Where expense_ID = %s")
-
-        values = []
-        values.append(a_ID)
-        cursor.execute(query, values)
-
-        # Make sure data is committed to the database
-        self.cnx.commit()
-
-        cursor.close()
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
