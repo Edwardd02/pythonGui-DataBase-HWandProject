@@ -111,15 +111,15 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_3)
         self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
-        self.tblExpenses_2 = QtWidgets.QTableWidget(self.horizontalLayoutWidget_3)
-        self.tblExpenses_2.setObjectName("tblExpenses_2")
-        self.tblExpenses_2.setColumnCount(2)
-        self.tblExpenses_2.setRowCount(0)
+        self.tblReports = QtWidgets.QTableWidget(self.horizontalLayoutWidget_3)
+        self.tblReports.setObjectName("tblReports")
+        self.tblReports.setColumnCount(2)
+        self.tblReports.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
-        self.tblExpenses_2.setHorizontalHeaderItem(0, item)
+        self.tblReports.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
-        self.tblExpenses_2.setHorizontalHeaderItem(1, item)
-        self.horizontalLayout_3.addWidget(self.tblExpenses_2)
+        self.tblReports.setHorizontalHeaderItem(1, item)
+        self.horizontalLayout_3.addWidget(self.tblReports)
         self.twtMain.addTab(self.tabReports, "")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -164,9 +164,9 @@ class Ui_MainWindow(object):
         self.btnEditExpenses.setText(_translate("MainWindow", "Edit"))
         self.btnDeleteExpenses.setText(_translate("MainWindow", "Delete"))
         self.twtMain.setTabText(self.twtMain.indexOf(self.tabExpenses), _translate("MainWindow", "Expenses"))
-        item = self.tblExpenses_2.horizontalHeaderItem(0)
+        item = self.tblReports.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Category"))
-        item = self.tblExpenses_2.horizontalHeaderItem(1)
+        item = self.tblReports.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Total Expenses"))
         self.twtMain.setTabText(self.twtMain.indexOf(self.tabReports), _translate("MainWindow", "Reports"))
 
@@ -324,6 +324,7 @@ class Ui_MainWindow(object):
         self.connect()
         self.refreshCategories()
         self.refreshExpenses()
+        self.refreshReports()
 
     def connect(self):
         # Connects to the database
@@ -344,6 +345,7 @@ class Ui_MainWindow(object):
         cursor.close()
 
     def refreshCategories(self):
+        self.refreshReports()
         # Refreshes the categories view by clearing the table and inserting the new data
         self.tblCategories.setRowCount(0)
 
@@ -373,23 +375,18 @@ class Ui_MainWindow(object):
         cursor = self.execute_query("Delete from Categories Where category_ID = %s", [a_ID])
         self.commit_and_close(cursor)
 
-    def getCategory(self, a_ID):
-        # Returns the category name for a given category ID
-        cursor = self.execute_query("Select category from Categories Where category_ID = %s", [a_ID])
-        category = cursor.fetchone()
-        self.commit_and_close(cursor)
-        return category[0]
-
     def refreshExpenses(self):
+        self.refreshReports()
         # Refreshes the expenses view by clearing the table and inserting the new data
         self.tblExpenses.setRowCount(0)
 
-        cursor = self.execute_query("Select * from Expenses")
+        cursor = self.execute_query("Select expense_ID, category, expense_date, expense, amount, notes "
+                                    "from Expenses natural join Categories"
+                                    " order by expense_ID")
 
-        for (expense_ID, category_ID, expense_date, expense, amount, notes) in cursor:
+        for (expense_ID, category, expense_date, expense, amount, notes) in cursor:
             rowCount = self.tblExpenses.rowCount()
             self.tblExpenses.insertRow(rowCount)
-            category = self.getCategory(category_ID)
             self.tblExpenses.setItem(rowCount, 0, QTableWidgetItem(str(expense_ID)))
             self.tblExpenses.setItem(rowCount, 1, QTableWidgetItem(str(category)))
             self.tblExpenses.setItem(rowCount, 2, QTableWidgetItem(str(expense_date)))
@@ -426,7 +423,23 @@ class Ui_MainWindow(object):
 
     def deleteExpenses(self, a_ID):
         # Deletes an expense from the database
-        cursor = self.execute_query("Delete from  Expenses Where expense_ID = %s", [a_ID])
+        cursor = self.execute_query("Delete from Expenses Where expense_ID = %s", [a_ID])
+        self.commit_and_close(cursor)
+
+    def refreshReports(self):
+        # Refreshes the categories view by clearing the table and inserting the new data
+        self.tblReports.setRowCount(0)
+
+        cursor = self.execute_query("Select category, sum(amount) amount "
+                                    "from Expenses natural join Categories"
+                                    " group by category")
+
+        for (category, amount) in cursor:  # Field names in DB
+            rowCount = self.tblReports.rowCount()
+            self.tblReports.insertRow(rowCount)
+            self.tblReports.setItem(rowCount, 0, QTableWidgetItem(category))
+            self.tblReports.setItem(rowCount, 1, QTableWidgetItem(str(amount)))
+
         self.commit_and_close(cursor)
 
 

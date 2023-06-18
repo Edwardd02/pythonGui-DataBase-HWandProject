@@ -113,7 +113,6 @@ class Ui_Dialog(object):
     def setupComboBox(self, categories = []):
         self.cmbCategory.clear()
         for category in categories:
-            category = re.sub(r'[^a-zA-Z0-9]', '', str(category))
             self.cmbCategory.addItem(category)
 
 
@@ -167,16 +166,16 @@ class Ui_Dialog(object):
         cursor = self.cnx.cursor()
 
         # Execute a query to retrieve data
-        query = "Select category from Categories"
+        query = "Select category from Categories order by category asc"
         cursor.execute(query)
-
         # Fetch all the rows returned by the query
         rows = cursor.fetchall()
-
-        if not rows:
+        categories = [row[0] for row in rows]
+        if not categories:
             cursor.close()
             return
-        self.setupComboBox(rows)
+
+        self.setupComboBox(categories)
         # Process the data
 
 
