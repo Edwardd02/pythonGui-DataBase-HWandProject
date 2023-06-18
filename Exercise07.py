@@ -373,17 +373,25 @@ class Ui_MainWindow(object):
         cursor = self.execute_query("Delete from Categories Where category_ID = %s", [a_ID])
         self.commit_and_close(cursor)
 
+    def getCategory(self, a_ID):
+        # Returns the category name for a given category ID
+        cursor = self.execute_query("Select category from Categories Where category_ID = %s", [a_ID])
+        category = cursor.fetchone()
+        self.commit_and_close(cursor)
+        return category[0]
+
     def refreshExpenses(self):
         # Refreshes the expenses view by clearing the table and inserting the new data
         self.tblExpenses.setRowCount(0)
 
         cursor = self.execute_query("Select * from Expenses")
 
-        for (expense_ID, category, expense_date, expense, amount, notes) in cursor:
+        for (expense_ID, category_ID, expense_date, expense, amount, notes) in cursor:
             rowCount = self.tblExpenses.rowCount()
             self.tblExpenses.insertRow(rowCount)
+            category = self.getCategory(category_ID)
             self.tblExpenses.setItem(rowCount, 0, QTableWidgetItem(str(expense_ID)))
-            self.tblExpenses.setItem(rowCount, 1, QTableWidgetItem(category))
+            self.tblExpenses.setItem(rowCount, 1, QTableWidgetItem(str(category)))
             self.tblExpenses.setItem(rowCount, 2, QTableWidgetItem(str(expense_date)))
             self.tblExpenses.setItem(rowCount, 3, QTableWidgetItem(expense))
             self.tblExpenses.setItem(rowCount, 4, QTableWidgetItem(str(amount)))
