@@ -155,7 +155,7 @@ class Ui_Dialog(object):
 
     def connect(self):
         self.cnx = mysql.connector.connect(user="root",
-                                           password="222488842dahy",
+                                           password="YourPassword",
                                            host="127.0.0.1",
                                            database="homework04")
 

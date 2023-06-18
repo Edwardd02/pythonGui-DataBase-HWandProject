@@ -329,7 +329,7 @@ class Ui_MainWindow(object):
     def connect(self):
         # Connects to the database
         self.cnx = mysql.connector.connect(user="root",
-                                           password="222488842dahy",
+                                           password="yourOwnPassword",
                                            host="127.0.0.1",
                                            database="homework04")
 
