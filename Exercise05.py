@@ -17,6 +17,7 @@ from PyQt5.QtCore import QDate
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import mysql.connector
+from PyQt5.QtWidgets import QApplication
 
 
 class Ui_Dialog(object):
@@ -84,6 +85,7 @@ class Ui_Dialog(object):
         # Update UI here
         self.listValues = listValues
         self.initialSetup()
+        self.connect_signals()
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -94,6 +96,12 @@ class Ui_Dialog(object):
         self.lblAmount.setText(_translate("Dialog", "Amount:"))
         self.lblExpense.setText(_translate("Dialog", "Expense:"))
         self.lblNotes.setText(_translate("Dialog", "Notes:"))
+
+    def connect_signals(self):
+       self.txtExpense.textChanged.connect(self.handle_input_changed)
+
+
+
 
 ##################### End UI Generation ###################
 
@@ -114,7 +122,24 @@ class Ui_Dialog(object):
         self.cmbCategory.clear()
         for category in categories:
             self.cmbCategory.addItem(category)
+    def handle_input_changed(self, text):
+        # Create a cursor object to execute queries
+        cursor = self.cnx.cursor()
 
+        # Execute a query to retrieve data
+        query = "Select expense, category from expenses natural join categories"
+        cursor.execute(query)
+        # Fetch all the rows returned by the query
+        rows = cursor.fetchall()
+        expenses = [row[0] for row in rows]
+        categories = [row[1] for row in rows]
+
+        # Close the cursor and the database connection
+
+        cursor.close()
+        for i in range(0, len(expenses)):
+            if text.lower() in expenses[i].lower():
+                self.cmbCategory.setCurrentText(categories[i])
 
     def setValues(self):
         if self.listValues == None:     #No list
@@ -139,6 +164,7 @@ class Ui_Dialog(object):
         return listResult
 
 
+
 ##################### End Events ###################
 
 
@@ -155,7 +181,7 @@ class Ui_Dialog(object):
 
     def connect(self):
         self.cnx = mysql.connector.connect(user="root",
-                                           password="YourPassword",
+                                           password="222488842dahy",
                                            host="127.0.0.1",
                                            database="homework04")
 
@@ -189,3 +215,4 @@ if __name__ == "__main__":
     ui.setupUi(Dialog, None)
     Dialog.show()
     sys.exit(app.exec_())
+
