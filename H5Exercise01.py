@@ -254,6 +254,8 @@ class Ui_MainWindow(object):
         self.connectButtonClicked(self.btnEditExpenses, self.btnEditExpenses_clicked)
         self.connectButtonClicked(self.btnDeleteCategories, self.btnDeleteCategories_clicked)
         self.connectButtonClicked(self.btnDeleteExpenses, self.btnDeleteExpenses_clicked)
+        self.dateFrom.dateChanged.connect(self.refreshReports)
+        self.dateTo.dateChanged.connect(self.refreshReports)
 
     def connectButtonClicked(self, button, slot):
         button.clicked.connect(slot)
@@ -507,17 +509,24 @@ class Ui_MainWindow(object):
         # Refreshes the categories view by clearing the table and inserting the new data
         self.tblReports.setRowCount(0)
 
-        cursor = self.execute_query("Select category, sum(amount) amount "
-                                    "from Expenses natural join Categories"
-                                    " group by category")
+        dateFrom = self.dateFrom.date().toString("yyyy-MM-dd")
+        dateTo = self.dateTo.date().toString("yyyy-MM-dd")
 
+        cursor = self.execute_query(("Select category, sum(amount) amount "
+                                    "from Expenses natural join Categories "
+                                    "WHERE expense_date BETWEEN %s AND %s "
+                                    "group by category "), (dateFrom, dateTo))
+
+        total = 0
         for (category, amount) in cursor:  # Field names in DB
             rowCount = self.tblReports.rowCount()
             self.tblReports.insertRow(rowCount)
             self.tblReports.setItem(rowCount, 0, QTableWidgetItem(category))
             self.tblReports.setItem(rowCount, 1, QTableWidgetItem(str(amount)))
+            total += amount
 
         self.commit_and_close(cursor)
+        self.txtTotal.setText(str(total))
 
 
 if __name__ == "__main__":
