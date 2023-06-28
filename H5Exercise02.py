@@ -259,6 +259,8 @@ class Ui_MainWindow(object):
         self.connectButtonClicked(self.btnReport1, self.btnReport1_clicked)
         self.connectButtonClicked(self.btnReport2, self.btnReport2_clicked)
         self.connectButtonClicked(self.btnReport3, self.btnReport3_clicked)
+        self.connectButtonClicked(self.btnReport4, self.btnReport4_clicked)
+        self.connectButtonClicked(self.btnReport5, self.btnReport5_clicked)
 
     def connectButtonClicked(self, button, slot):
         button.clicked.connect(slot)
@@ -610,6 +612,64 @@ class Ui_MainWindow(object):
             self.tblReports.insertRow(rowCount)
             self.tblReports.setItem(rowCount, 0, QTableWidgetItem(category))
             self.tblReports.setItem(rowCount, 1, QTableWidgetItem(str(amount)))
+            total += amount
+
+        self.commit_and_close(cursor)
+        self.txtTotal.setText(str(total))
+
+
+    def btnReport4_clicked(self):
+        # Report the count and total cost of each expense item per category in a date range
+        self.tblReports.setRowCount(0)
+
+        dateFrom = self.dateFrom.date().toString("yyyy-MM-dd")
+        dateTo = self.dateTo.date().toString("yyyy-MM-dd")
+
+        cursor = self.execute_query("SELECT category, expense, count(*), sum(amount) "
+                                    "FROM Expenses e, Categories c "
+                                    "WHERE e.category_id = c.category_id AND expense_date BETWEEN %s AND %s AND expense <> '' "
+                                    "GROUP BY category, expense "
+                                    "ORDER BY count(*) DESC", (dateFrom, dateTo))
+
+        self.tblReports.setColumnCount(4)
+        self.tblReports.setHorizontalHeaderLabels(("Category", "Expense", "Count", "Total Amount"))
+
+        total = 0
+        for (category, expense, count, amount) in cursor:
+            rowCount = self.tblReports.rowCount()
+            self.tblReports.insertRow(rowCount)
+            self.tblReports.setItem(rowCount, 0, QTableWidgetItem(category))
+            self.tblReports.setItem(rowCount, 1, QTableWidgetItem(expense))
+            self.tblReports.setItem(rowCount, 2, QTableWidgetItem(str(count)))
+            self.tblReports.setItem(rowCount, 3, QTableWidgetItem(str(amount)))
+            total += amount
+
+        self.commit_and_close(cursor)
+        self.txtTotal.setText(str(total))
+
+    def btnReport5_clicked(self):
+        # Report the maximum expense amount for each category in a date range
+        self.tblReports.setRowCount(0)
+
+        dateFrom = self.dateFrom.date().toString("yyyy-MM-dd")
+        dateTo = self.dateTo.date().toString("yyyy-MM-dd")
+
+        cursor = self.execute_query("SELECT c.category, max(amount) "
+                                    "FROM Expenses e, Categories c "
+                                    "WHERE e.category_id = c.category_id AND expense_date BETWEEN %s AND %s "
+                                    "GROUP BY category "
+                                    "ORDER BY max(amount) DESC", (dateFrom, dateTo))
+
+        self.tblReports.setColumnCount(2)
+        self.tblReports.setHorizontalHeaderLabels(("Category", "Max Amount"))
+
+        total = 0
+        for (category, amount) in cursor:
+            rowCount = self.tblReports.rowCount()
+            self.tblReports.insertRow(rowCount)
+            self.tblReports.setItem(rowCount, 0, QTableWidgetItem(category))
+            self.tblReports.setItem(rowCount, 1, QTableWidgetItem(str(amount)))
+
             total += amount
 
         self.commit_and_close(cursor)
