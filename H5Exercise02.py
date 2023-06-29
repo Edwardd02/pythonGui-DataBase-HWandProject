@@ -145,23 +145,26 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.addWidget(self.tblReports)
         self.verticalLayout_11 = QtWidgets.QVBoxLayout()
         self.verticalLayout_11.setObjectName("verticalLayout_11")
-        self.btnReport1 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.btnReport1.setObjectName("btnReport1")
-        self.verticalLayout_11.addWidget(self.btnReport1)
-        self.btnReport2 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.btnReport2.setObjectName("btnReport2")
-        self.verticalLayout_11.addWidget(self.btnReport2)
-        self.btnReport3 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.btnReport3.setObjectName("btnReport3")
-        self.verticalLayout_11.addWidget(self.btnReport3)
-        self.btnReport4 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.btnReport4.setObjectName("btnReport4")
-        self.verticalLayout_11.addWidget(self.btnReport4)
-        self.btnReport5 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.btnReport5.setObjectName("btnReport5")
-        self.verticalLayout_11.addWidget(self.btnReport5)
+        self.btnExpensesByDate = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnExpensesByDate.setObjectName("btnExpensesByDate")
+        self.verticalLayout_11.addWidget(self.btnExpensesByDate)
+        self.btnDailyTotals = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnDailyTotals.setObjectName("btnDailyTotals")
+        self.verticalLayout_11.addWidget(self.btnDailyTotals)
+        self.btnCategoryAverages = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnCategoryAverages.setObjectName("btnCategoryAverages")
+        self.verticalLayout_11.addWidget(self.btnCategoryAverages)
+        self.btnExpenseCounts = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnExpenseCounts.setObjectName("btnExpenseCounts")
+        self.verticalLayout_11.addWidget(self.btnExpenseCounts)
+        self.btnCategoryMax = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnCategoryMax.setObjectName("btnCategoryMax")
+        self.verticalLayout_11.addWidget(self.btnCategoryMax)
         spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_11.addItem(spacerItem3)
+        self.btnExportToExcel = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnExportToExcel.setObjectName("btnExportToExcel")
+        self.verticalLayout_11.addWidget(self.btnExportToExcel)
         self.horizontalLayout_3.addLayout(self.verticalLayout_11)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
@@ -228,11 +231,12 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Category"))
         item = self.tblReports.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Total Expenses"))
-        self.btnReport1.setText(_translate("MainWindow", "Report1"))
-        self.btnReport2.setText(_translate("MainWindow", "Report2"))
-        self.btnReport3.setText(_translate("MainWindow", "Report3"))
-        self.btnReport4.setText(_translate("MainWindow", "Report4"))
-        self.btnReport5.setText(_translate("MainWindow", "Report5"))
+        self.btnExpensesByDate.setText(_translate("MainWindow", "Expenses by Date"))
+        self.btnDailyTotals.setText(_translate("MainWindow", "Daily Totals"))
+        self.btnCategoryAverages.setText(_translate("MainWindow", "Category Averages"))
+        self.btnExpenseCounts.setText(_translate("MainWindow", "Expense Counts"))
+        self.btnCategoryMax.setText(_translate("MainWindow", "Category Max"))
+        self.btnExportToExcel.setText(_translate("MainWindow", "Export to Excel"))
         self.lblTotal.setText(_translate("MainWindow", "Total: "))
         self.twtMain.setTabText(self.twtMain.indexOf(self.tabReports), _translate("MainWindow", "Reports"))
 
@@ -256,11 +260,11 @@ class Ui_MainWindow(object):
         self.connectButtonClicked(self.btnDeleteExpenses, self.btnDeleteExpenses_clicked)
         self.dateFrom.dateChanged.connect(self.refreshReports)
         self.dateTo.dateChanged.connect(self.refreshReports)
-        self.connectButtonClicked(self.btnReport1, self.btnReport1_clicked)
-        self.connectButtonClicked(self.btnReport2, self.btnReport2_clicked)
-        self.connectButtonClicked(self.btnReport3, self.btnReport3_clicked)
-        self.connectButtonClicked(self.btnReport4, self.btnReport4_clicked)
-        self.connectButtonClicked(self.btnReport5, self.btnReport5_clicked)
+        self.connectButtonClicked(self.btnExpensesByDate, self.btnExpensesByDate_clicked)
+        self.connectButtonClicked(self.btnDailyTotals, self.btnDailyTotals_clicked)
+        self.connectButtonClicked(self.btnCategoryAverages, self.btnCategoryAverages_clicked)
+        self.connectButtonClicked(self.btnExpenseCounts, self.btnExpenseCounts_clicked)
+        self.connectButtonClicked(self.btnCategoryMax, self.btnCategoryMax_clicked)
 
     def connectButtonClicked(self, button, slot):
         button.clicked.connect(slot)
@@ -536,7 +540,7 @@ class Ui_MainWindow(object):
         self.commit_and_close(cursor)
         self.txtTotal.setText(str(total))
 
-    def btnReport1_clicked(self):
+    def btnExpensesByDate_clicked(self):
         # Report all the expenses between 2 dates, sorted by date.
         self.tblReports.setRowCount(0)
 
@@ -563,7 +567,7 @@ class Ui_MainWindow(object):
         self.commit_and_close(cursor)
         self.txtTotal.setText(str(total))
 
-    def btnReport2_clicked(self):
+    def btnDailyTotals_clicked(self):
         # Report the total expenses for each date within a specified date range, sorted in descending order
         self.tblReports.setRowCount(0)
 
@@ -590,7 +594,7 @@ class Ui_MainWindow(object):
         self.commit_and_close(cursor)
         self.txtTotal.setText(str(total))
 
-    def btnReport3_clicked(self):
+    def btnCategoryAverages_clicked(self):
         # Report average expense of each category in a specific date range
         self.tblReports.setRowCount(0)
 
@@ -618,7 +622,7 @@ class Ui_MainWindow(object):
         self.txtTotal.setText(str(total))
 
 
-    def btnReport4_clicked(self):
+    def btnExpenseCounts_clicked(self):
         # Report the count and total cost of each expense item per category in a date range
         self.tblReports.setRowCount(0)
 
@@ -647,7 +651,7 @@ class Ui_MainWindow(object):
         self.commit_and_close(cursor)
         self.txtTotal.setText(str(total))
 
-    def btnReport5_clicked(self):
+    def btnCategoryMax_clicked(self):
         # Report the maximum expense amount for each category in a date range
         self.tblReports.setRowCount(0)
 
