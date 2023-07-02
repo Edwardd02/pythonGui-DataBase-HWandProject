@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+from PyQt5.QtChart import QPieSeries, QChartView, QChart
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPainter
 
 # Form implementation generated from reading ui file 'Exercise07.ui'
 #
@@ -10,7 +12,7 @@
 import Exercise03
 import Exercise05
 from PyQt5.QtWidgets import QTableWidgetItem, QMessageBox
-
+from openpyxl import Workbook
 import mysql.connector
 
 #############################################################
@@ -22,6 +24,8 @@ import mysql.connector
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 categories = []
+
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -165,6 +169,9 @@ class Ui_MainWindow(object):
         self.btnExportToExcel = QtWidgets.QPushButton(self.verticalLayoutWidget)
         self.btnExportToExcel.setObjectName("btnExportToExcel")
         self.verticalLayout_11.addWidget(self.btnExportToExcel)
+        self.btnOpenInQtChart = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnOpenInQtChart.setObjectName("OpenInQtChart")
+        self.verticalLayout_11.addWidget(self.btnOpenInQtChart)
         self.horizontalLayout_3.addLayout(self.verticalLayout_11)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
@@ -237,6 +244,7 @@ class Ui_MainWindow(object):
         self.btnExpenseCounts.setText(_translate("MainWindow", "Expense Counts"))
         self.btnCategoryMax.setText(_translate("MainWindow", "Category Max"))
         self.btnExportToExcel.setText(_translate("MainWindow", "Export to Excel"))
+        self.btnOpenInQtChart.setText(_translate("MainWindow", "Open in Qt Chart"))
         self.lblTotal.setText(_translate("MainWindow", "Total: "))
         self.twtMain.setTabText(self.twtMain.indexOf(self.tabReports), _translate("MainWindow", "Reports"))
 
@@ -265,10 +273,11 @@ class Ui_MainWindow(object):
         self.connectButtonClicked(self.btnCategoryAverages, self.btnCategoryAverages_clicked)
         self.connectButtonClicked(self.btnExpenseCounts, self.btnExpenseCounts_clicked)
         self.connectButtonClicked(self.btnCategoryMax, self.btnCategoryMax_clicked)
+        self.connectButtonClicked(self.btnExportToExcel, self.btnExportToExcel_clicked)
+        self.connectButtonClicked(self.btnOpenInQtChart, self.btnOpenInQtChart_clicked)
 
     def connectButtonClicked(self, button, slot):
         button.clicked.connect(slot)
-
 
     # Functions for buttons in categories
     def btnNewCategories_clicked(self):
@@ -291,7 +300,6 @@ class Ui_MainWindow(object):
 
         listValues = self.openDialog(Exercise03, listValues)
         if listValues is not None:
-
             self.updateCategories(listValues)
             self.refreshCategories()
             # Make sure the category in expense also change
@@ -329,7 +337,6 @@ class Ui_MainWindow(object):
         if listValues is not None:
             self.insertExpenses(listValues)
             self.refreshExpenses()
-
 
     def btnEditExpenses_clicked(self):
         currentRow = self.tblExpenses.currentRow()
@@ -392,6 +399,7 @@ class Ui_MainWindow(object):
             return form.getValues()
 
         return None
+
     #############################################################
     #                                                           #
     #                          Database                         #
@@ -408,7 +416,7 @@ class Ui_MainWindow(object):
     def connect(self):
         # Connects to the database
         self.cnx = mysql.connector.connect(user="root",
-                                           password="ljt916159807",
+                                           password="222488842dahy",
                                            host="127.0.0.1",
                                            database="homework04")
 
@@ -522,9 +530,9 @@ class Ui_MainWindow(object):
         dateTo = self.dateTo.date().toString("yyyy-MM-dd")
 
         cursor = self.execute_query(("Select category, sum(amount) amount "
-                                    "from Expenses natural join Categories "
-                                    "WHERE expense_date BETWEEN %s AND %s "
-                                    "group by category "), (dateFrom, dateTo))
+                                     "from Expenses natural join Categories "
+                                     "WHERE expense_date BETWEEN %s AND %s "
+                                     "group by category "), (dateFrom, dateTo))
 
         self.tblReports.setColumnCount(2)
         self.tblReports.setHorizontalHeaderLabels(("Category", "Amount"))
@@ -560,8 +568,9 @@ class Ui_MainWindow(object):
             rowCount = self.tblReports.rowCount()
             self.tblReports.insertRow(rowCount)
             self.tblReports.setItem(rowCount, 0, QTableWidgetItem(str(expense_date)))
-            self.tblReports.setItem(rowCount, 1, QTableWidgetItem(category))
-            self.tblReports.setItem(rowCount, 2, QTableWidgetItem(str(amount)))
+            self.tblReports.setItem(rowCount, 1, QTableWidgetItem(str(amount)))
+            self.tblReports.setItem(rowCount, 2, QTableWidgetItem(category))
+
             total += amount
 
         self.commit_and_close(cursor)
@@ -621,7 +630,6 @@ class Ui_MainWindow(object):
         self.commit_and_close(cursor)
         self.txtTotal.setText(str(total))
 
-
     def btnExpenseCounts_clicked(self):
         # Report the count and total cost of each expense item per category in a date range
         self.tblReports.setRowCount(0)
@@ -643,8 +651,8 @@ class Ui_MainWindow(object):
             rowCount = self.tblReports.rowCount()
             self.tblReports.insertRow(rowCount)
             self.tblReports.setItem(rowCount, 0, QTableWidgetItem(category))
-            self.tblReports.setItem(rowCount, 1, QTableWidgetItem(expense))
-            self.tblReports.setItem(rowCount, 2, QTableWidgetItem(str(count)))
+            self.tblReports.setItem(rowCount, 1, QTableWidgetItem(str(count)))
+            self.tblReports.setItem(rowCount, 2, QTableWidgetItem(expense))
             self.tblReports.setItem(rowCount, 3, QTableWidgetItem(str(amount)))
             total += amount
 
@@ -678,6 +686,43 @@ class Ui_MainWindow(object):
 
         self.commit_and_close(cursor)
         self.txtTotal.setText(str(total))
+
+    def btnExportToExcel_clicked(self):
+        # Export the report to an Excel file
+        wb = Workbook()
+        ws = wb.active
+
+        for row in range(self.tblReports.rowCount()):
+            for col in range(self.tblReports.columnCount()):
+                ws.cell(row=row + 1, column=col + 1).value = self.tblReports.item(row, col).text()
+
+        wb.save("ExpenseReport.xlsx")
+
+    def btnOpenInQtChart_clicked(self):
+        # Create the chart
+        series = QPieSeries()
+
+        for row in range(self.tblReports.rowCount()):
+            # Get category and amount from QTableWidget
+            category = self.tblReports.item(row, 0).text()
+            print(self.tblReports.item(row, 1).text())
+
+
+            amount = float(self.tblReports.item(row, 1).text())  # This Design only applies to Expense Counts
+
+            # Add to series
+            series.append(category, amount)
+
+        chart = QChart()
+        chart.addSeries(series)
+        chart.setTitle("Expense Report")
+        chart.legend().setAlignment(Qt.AlignLeft)
+
+        # Show the chart
+        self.chartView = QChartView(chart)
+        self.chartView.setRenderHint(QPainter.Antialiasing)
+        self.chartView.setFixedSize(800, 600)
+        self.chartView.show()
 
 
 if __name__ == "__main__":
