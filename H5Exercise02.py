@@ -416,7 +416,7 @@ class Ui_MainWindow(object):
     def connect(self):
         # Connects to the database
         self.cnx = mysql.connector.connect(user="root",
-                                           password="222488842dahy",
+                                           password="ljt916159807",
                                            host="127.0.0.1",
                                            database="homework04")
 
@@ -561,7 +561,7 @@ class Ui_MainWindow(object):
                                     "ORDER BY expense_date", (dateFrom, dateTo))
 
         self.tblReports.setColumnCount(3)
-        self.tblReports.setHorizontalHeaderLabels(("Date", "Category", "Amount"))
+        self.tblReports.setHorizontalHeaderLabels(("Date", "Amount", "Category"))
 
         total = 0
         for (expense_date, category, amount) in cursor:
@@ -637,23 +637,22 @@ class Ui_MainWindow(object):
         dateFrom = self.dateFrom.date().toString("yyyy-MM-dd")
         dateTo = self.dateTo.date().toString("yyyy-MM-dd")
 
-        cursor = self.execute_query("SELECT category, expense, count(*), sum(amount) "
+        cursor = self.execute_query("SELECT expense, count(*), sum(amount) "
                                     "FROM Expenses e, Categories c "
                                     "WHERE e.category_id = c.category_id AND expense_date BETWEEN %s AND %s AND expense <> '' "
                                     "GROUP BY category, expense "
                                     "ORDER BY count(*) DESC", (dateFrom, dateTo))
 
-        self.tblReports.setColumnCount(4)
-        self.tblReports.setHorizontalHeaderLabels(("Category", "Expense", "Count", "Total Amount"))
+        self.tblReports.setColumnCount(3)
+        self.tblReports.setHorizontalHeaderLabels(("Expense", "Count", "Total Amount"))
 
         total = 0
-        for (category, expense, count, amount) in cursor:
+        for (expense, count, amount) in cursor:
             rowCount = self.tblReports.rowCount()
             self.tblReports.insertRow(rowCount)
-            self.tblReports.setItem(rowCount, 0, QTableWidgetItem(category))
+            self.tblReports.setItem(rowCount, 0, QTableWidgetItem(expense))
             self.tblReports.setItem(rowCount, 1, QTableWidgetItem(str(count)))
-            self.tblReports.setItem(rowCount, 2, QTableWidgetItem(expense))
-            self.tblReports.setItem(rowCount, 3, QTableWidgetItem(str(amount)))
+            self.tblReports.setItem(rowCount, 2, QTableWidgetItem(str(amount)))
             total += amount
 
         self.commit_and_close(cursor)
