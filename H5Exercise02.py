@@ -416,7 +416,7 @@ class Ui_MainWindow(object):
     def connect(self):
         # Connects to the database
         self.cnx = mysql.connector.connect(user="root",
-                                           password="ljt916159807",
+                                           password="222488842dahy",
                                            host="127.0.0.1",
                                            database="homework04")
 
@@ -690,10 +690,11 @@ class Ui_MainWindow(object):
         # Export the report to an Excel file
         wb = Workbook()
         ws = wb.active
-
+        for col in range(self.tblReports.columnCount()):
+            ws.cell(row=1, column=col + 1).value = self.tblReports.horizontalHeaderItem(col).text()
         for row in range(self.tblReports.rowCount()):
             for col in range(self.tblReports.columnCount()):
-                ws.cell(row=row + 1, column=col + 1).value = self.tblReports.item(row, col).text()
+                ws.cell(row=row + 2, column=col + 1).value = self.tblReports.item(row, col).text()
 
         wb.save("ExpenseReport.xlsx")
 
