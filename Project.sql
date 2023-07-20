@@ -28,7 +28,7 @@ ENGINE = InnoDB;
 -- Table `mydb`.`instructor`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`instructor` (
-  `instructor_id` INT NOT NULL AUTO_INCREMENT,
+  `instructor_id` INT NOT NULL,
   `instructor_name` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`instructor_id`))
 ENGINE = InnoDB;
