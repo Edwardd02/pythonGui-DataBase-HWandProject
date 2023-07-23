@@ -21,6 +21,8 @@ import mysql.connector
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 studentId = []
+
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -350,15 +352,15 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.addWidget(self.tblReports)
         self.verticalLayout_11 = QtWidgets.QVBoxLayout()
         self.verticalLayout_11.setObjectName("verticalLayout_11")
-        self.btnReport1 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.btnReport1.setObjectName("btnReport1")
-        self.verticalLayout_11.addWidget(self.btnReport1)
-        self.btnReport2 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.btnReport2.setObjectName("btnReport2")
-        self.verticalLayout_11.addWidget(self.btnReport2)
-        self.btnReport3 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.btnReport3.setObjectName("btnReport3")
-        self.verticalLayout_11.addWidget(self.btnReport3)
+        self.btnCourseAttendance = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnCourseAttendance.setObjectName("btnCourseAttendance")
+        self.verticalLayout_11.addWidget(self.btnCourseAttendance)
+        self.btnCourseEnrollment = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnCourseEnrollment.setObjectName("btnCourseEnrollment")
+        self.verticalLayout_11.addWidget(self.btnCourseEnrollment)
+        self.btnStudentAttendance = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.btnStudentAttendance.setObjectName("btnStudentAttendance")
+        self.verticalLayout_11.addWidget(self.btnStudentAttendance)
         spacerItem8 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_11.addItem(spacerItem8)
         self.horizontalLayout_3.addLayout(self.verticalLayout_11)
@@ -376,7 +378,6 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.twtMain.setCurrentIndex(4)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
 
         # Update UI Here
         self.initialSetup()
@@ -481,9 +482,9 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Date"))
         item = self.tblReports.horizontalHeaderItem(3)
         item.setText(_translate("MainWindow", "Status"))
-        self.btnReport1.setText(_translate("MainWindow", "Report1"))
-        self.btnReport2.setText(_translate("MainWindow", "Report2"))
-        self.btnReport3.setText(_translate("MainWindow", "Report3"))
+        self.btnCourseAttendance.setText(_translate("MainWindow", "Course Attendance"))
+        self.btnCourseEnrollment.setText(_translate("MainWindow", "Course Enrollment"))
+        self.btnStudentAttendance.setText(_translate("MainWindow", "Student Attendance"))
         self.twtMain.setTabText(self.twtMain.indexOf(self.tabReports), _translate("MainWindow", "Reports"))
 
     ##################### End UI Generation ###################
@@ -491,7 +492,6 @@ class Ui_MainWindow(object):
     def initialSetup(self):
         self.setupEvents()
         self.setupDatabase()
-
 
     def connect_signals(self):
         self.cmbSemesterAttendance.currentIndexChanged.connect(self.refreshAttendance)
@@ -502,6 +502,7 @@ class Ui_MainWindow(object):
         self.cmbCourseReports.currentIndexChanged.connect(self.refreshReports)
         self.dateReports.dateChanged.connect(self.refreshReports)
         self.cmbSectionReports.currentIndexChanged.connect(self.refreshReports)
+
     #############################################################
     #                                                           #
     #                          Events                           #
@@ -526,7 +527,11 @@ class Ui_MainWindow(object):
         self.connectButtonClicked(self.btnNewAttendance, self.btnNewAttendance_clicked)
         self.connectButtonClicked(self.btnEditAttendance, self.btnEditAttendance_clicked)
         self.connectButtonClicked(self.btnDeleteAttendance, self.btnDeleteAttendance_clicked)
-
+        self.connectButtonClicked(self.btnCreateAll, self.btnCreateAllAttendance_clicked)
+        self.connectButtonClicked(self.btnDeleteAll, self.btnDeleteAllAttendance_clicked)
+        self.connectButtonClicked(self.btnCourseAttendance, self.btnCourseAttendance_clicked)
+        self.connectButtonClicked(self.btnCourseEnrollment, self.btnCourseEnrollment_clicked)
+        self.connectButtonClicked(self.btnStudentAttendance, self.btnStudentAttendance_clicked)
 
     def connectButtonClicked(self, button, slot):
         button.clicked.connect(slot)
@@ -611,7 +616,6 @@ class Ui_MainWindow(object):
             self.insertRegistration(listValues)
             self.refreshRegistration()
 
-
     def btnEditRegistration_clicked(self):
         currentRow = self.tblRegistration.currentRow()
 
@@ -640,6 +644,14 @@ class Ui_MainWindow(object):
         courseId = self.cmbCourseAttendance.currentText()
         date = self.dateAttendance.date().toString("yyyy-MM-dd")
         return courseId, section, semester, date
+
+    def getCurrentReports(self):
+        course = self.cmbCourseReports.currentText()
+        section = self.cmbSectionReports.currentText()
+        semester = self.cmbSemesterReports.currentText()
+        date = self.dateReports.date().toPyDate()
+        return course, section, semester, date
+
     def btnNewAttendance_clicked(self):
         courseId, section, semester, date = self.getCurrentAttendance()
         data = self.matchInToRegistration(courseId, section, semester, date)
@@ -662,7 +674,8 @@ class Ui_MainWindow(object):
             return
 
         listValues = []
-        studentName = self.tblAttendance.item(currentRow, 1).text() + " " + self.tblAttendance.item(currentRow, 2).text()
+        studentName = self.tblAttendance.item(currentRow, 1).text() + " " + self.tblAttendance.item(currentRow,
+                                                                                                    2).text()
         studentId = self.getStudentID(studentName)
         registration_id = self.tblAttendance.item(currentRow, 0).text()
 
@@ -686,6 +699,142 @@ class Ui_MainWindow(object):
     def btnDeleteAttendance_clicked(self):
         self.deleteRow(self.tblAttendance, self.deleteAttendance, self.refreshAttendance)
 
+    def btnCreateAllAttendance_clicked(self):
+        courseId, section, semester, date = self.getCurrentAttendance()
+        data = self.matchInToRegistration(courseId, section, semester, date)
+        studentIds = [rows[0] for rows in data]
+        for studentId in studentIds:
+            self.insertAttendance([studentId, "Present", date])
+        self.refreshAttendance()
+
+    def btnDeleteAllAttendance_clicked(self):
+        answer = QMessageBox.question(
+            None,
+            "Delete row?",
+            "Are you sure you want to delete this row?",
+            QMessageBox.StandardButton.Yes |
+            QMessageBox.StandardButton.No
+        )
+
+        # Check if user clicked Yes button
+        if answer == QMessageBox.StandardButton.Yes:
+
+            for i in range(self.tblAttendance.rowCount()):
+                self.deleteAttendance(self.tblAttendance.item(i, 0).text())
+            self.refreshAttendance()
+
+    # Regular attendance is a crucial component of academic success,
+    # and understanding attendance patterns can provide valuable
+    # insights for course instructors. For example, consistently low
+    # attendance may indicate a scheduling issue, lack of student engagement,
+    # or problems with the course material. This report can aid instructors in
+    # identifying potential issues early and taking necessary measures to enhance
+    # course effectiveness and student engagement. Furthermore, the report can also be
+    # used to follow-up with students who are frequently absent, helping to ensure they
+    # do not fall behind in their coursework.
+    def btnCourseAttendance_clicked(self):
+        self.tblReports.setRowCount(0)
+
+        self.tblReports.setColumnCount(6)
+        self.tblReports.setHorizontalHeaderLabels(("Course Name", "Semester", "Date of Class",
+                                                   "Total Students", "Attended",
+                                                   "% of Attended"))
+
+        courseId, section, semester, date = self.getCurrentReports()
+        data = self.matchInToRegistration(courseId, section, semester, date)
+        if not data:
+            QMessageBox.warning(None, "No Data", "No data found")
+            return
+        registrationId = data[0][0]
+        courseName = self.getCourseName(courseId)
+        totalStudents = self.getTotalStudents(registrationId)
+        attendedStudents = self.getAttendedStudents(courseId, section, semester, date)
+        percentage = (attendedStudents / totalStudents) * 100
+
+        row = self.tblReports.rowCount()
+        self.tblReports.insertRow(row)
+        self.tblReports.setItem(row, 0, QtWidgets.QTableWidgetItem(courseName))
+        self.tblReports.setItem(row, 1, QtWidgets.QTableWidgetItem(semester))
+        self.tblReports.setItem(row, 2, QtWidgets.QTableWidgetItem(str(date)))
+        self.tblReports.setItem(row, 3, QtWidgets.QTableWidgetItem(str(totalStudents)))
+        self.tblReports.setItem(row, 4, QtWidgets.QTableWidgetItem(str(attendedStudents)))
+        self.tblReports.setItem(row, 5, QtWidgets.QTableWidgetItem(str(percentage)))
+
+    # This report would be beneficial for administrators to understand which courses are popular among students,
+    # and can guide decisions about resources allocation (such as classroom assignments, adding more sections, etc.).
+
+    def btnCourseEnrollment_clicked(self):
+        self.tblReports.setRowCount(0)
+
+        self.tblReports.setColumnCount(4)
+        self.tblReports.setHorizontalHeaderLabels(("Course Name", "Section", "Semester", "Enrolled Students"))
+        courseId, section, semester, date = self.getCurrentReports()
+        data = self.matchInToRegistration(courseId, section, semester, date)
+        if not data:
+            QMessageBox.warning(None, "No Data", "No data found")
+            return
+        registrationId = data[0][0]
+        courseName = self.getCourseName(courseId)
+        totalStudents = self.getTotalStudents(registrationId)
+        row = self.tblReports.rowCount()
+
+        self.tblReports.insertRow(row)
+        self.tblReports.setItem(row, 0, QtWidgets.QTableWidgetItem(courseName))
+        self.tblReports.setItem(row, 1, QtWidgets.QTableWidgetItem(section))
+        self.tblReports.setItem(row, 2, QtWidgets.QTableWidgetItem(semester))
+        self.tblReports.setItem(row, 3, QtWidgets.QTableWidgetItem(str(totalStudents)))
+
+    # Monitoring attendance can help instructors identify students who may be at risk of falling behind due to absences.
+    # Regular attendance often correlates with better understanding of the course material and higher grades.
+    def btnStudentAttendance_clicked(self):
+        self.tblReports.setRowCount(0)
+        
+        
+        
+        self.tblReports.setColumnCount(3)
+        self.tblReports.setHorizontalHeaderLabels(("Student First Name", "Student Last Name", "% of Attended"))
+
+        cursor = self.execute_query("Select * from student")
+        dataStduents = cursor.fetchall()
+        for student in dataStduents:
+            row = self.tblReports.rowCount()
+            percentage = self.getPercantageOfParticularStudent(student[0])
+            self.tblReports.insertRow(row)
+            self.tblReports.setItem(row, 0, QtWidgets.QTableWidgetItem(student[1]))
+            self.tblReports.setItem(row, 1, QtWidgets.QTableWidgetItem(student[2]))
+            self.tblReports.setItem(row, 2, QtWidgets.QTableWidgetItem(str(percentage)))
+
+    def getCourseName(self, course_id):
+        cursor = self.execute_query("SELECT course_title FROM course WHERE course_id = %s", (course_id,))
+        return cursor.fetchone()[0]
+
+    def getTotalStudents(self, registration_id):
+        cursor = self.execute_query(
+            "SELECT COUNT(*) FROM registration natural join schedule WHERE schedule_id = (select schedule_id from registration where registration_id = %s)",
+            (registration_id,))
+        return cursor.fetchone()[0]
+
+    def getAttendedStudents(self, course_id, section, semester, date):
+        cursor = self.execute_query(
+            "SELECT COUNT(*) from registration right join attendance on registration.registration_id = attendance.registration_id "
+            "natural join student "
+            "natural join schedule "
+            "WHERE course_id = %s AND section = %s AND semester = %s AND attendance_date = %s AND status = '1' ",
+            (course_id, section, semester, date))
+        return cursor.fetchone()[0]
+    def getPercantageOfParticularStudent(self, student_id):
+
+        cursor = self.execute_query(
+            "SELECT 100 * COUNT(*) / (SELECT COUNT(*) from registration right join attendance on registration.registration_id = attendance.registration_id "
+            "natural join student "
+            "natural join schedule "
+            "WHERE student_id = %s) "
+            "from registration right join attendance on registration.registration_id = attendance.registration_id "
+            "natural join student "
+            "natural join schedule "
+            "WHERE student_id = %s AND status = '1' ",
+            (student_id, student_id,))
+        return cursor.fetchone()[0]
     def openDialog(self, dialogClass, listValues):
         Dialog = QtWidgets.QDialog()
         form = dialogClass.Ui_Dialog()
@@ -943,9 +1092,10 @@ class Ui_MainWindow(object):
         # Refreshes the registration view by clearing the table and inserting the new data
         self.tblRegistration.setRowCount(0)
 
-        cursor = self.execute_query("Select registration_id, concat(student_first_name, ' ', student_last_name), course_id, section, semester "
-                                    "from registration natural join student "
-                                    "natural join schedule")
+        cursor = self.execute_query(
+            "Select registration_id, concat(student_first_name, ' ', student_last_name), course_id, section, semester "
+            "from registration natural join student "
+            "natural join schedule")
 
         for (registration_id, student_name, course_id, section, semester) in cursor:
             rowCount = self.tblRegistration.rowCount()
@@ -1011,7 +1161,7 @@ class Ui_MainWindow(object):
         cursor = self.execute_query("Update registration "
                                     "Set student_id = %s, schedule_id = %s "
                                     "Where registration_id = %s",
-                                    [student_id,schedule_id, registration_id])
+                                    [student_id, schedule_id, registration_id])
         self.commit_and_close(cursor)
 
     def deleteRegistration(self, a_ID):
@@ -1025,17 +1175,17 @@ class Ui_MainWindow(object):
         self.setupComboboxSemester(self.cmbSemesterAttendance)
         self.setupComboboxCourse(self.cmbCourseAttendance)
         self.setupComboboxSection(self.cmbSectionAttendance)
-        semester = self.cmbSemesterAttendance.currentText()
-        course = self.cmbCourseAttendance.currentText()
-        section = self.cmbSectionAttendance.currentText()
-        date = self.dateAttendance.date().toString("yyyy-MM-dd")
-        cursor = self.execute_query("Select attendance_id, student_first_name, student_last_name, semester, course_id, section, attendance_date, status "
-                                    "from registration right join attendance on registration.registration_id = attendance.registration_id "
-                                    "natural join student "
-                                    "natural join schedule "
-                                    "where semester = %s and course_id = %s and section = %s and attendance_date = %s", [semester, course, section, date])
+        course, section, semester, date = self.getCurrentAttendance()
+        cursor = self.execute_query(
+            "Select attendance_id, student_first_name, student_last_name, semester, course_id, section, attendance_date, status "
+            "from registration right join attendance on registration.registration_id = attendance.registration_id "
+            "natural join student "
+            "natural join schedule "
+            "where semester = %s and course_id = %s and section = %s and attendance_date = %s",
+            [semester, course, section, date])
 
-        for (attendance_id, student_first_name, student_last_name, course_id, section, semester, attendance_date, status) in cursor:
+        for (attendance_id, student_first_name, student_last_name, semester, course_id, section, attendance_date,
+             status) in cursor:
             rowCount = self.tblAttendance.rowCount()
             self.tblAttendance.insertRow(rowCount)
             self.tblAttendance.setItem(rowCount, 0, QTableWidgetItem(str(attendance_id)))
@@ -1047,8 +1197,6 @@ class Ui_MainWindow(object):
             self.tblAttendance.setItem(rowCount, 6, QTableWidgetItem(str(attendance_date)))
             self.tblAttendance.setItem(rowCount, 7, QTableWidgetItem("Present" if status == 1 else "Absent"))
         self.commit_and_close(cursor)
-
-
 
     def getRegistrationID(self, a_listValues):
         # Returns the ID of a registration based on its course ID, section, and semester
@@ -1068,17 +1216,15 @@ class Ui_MainWindow(object):
 
         return None
 
-
-
     def insertAttendance(self, a_listValues):
         # Inserts a new attendance into the database
         courseId, section, semester, date = self.getCurrentAttendance()
         student_id = a_listValues[0]
         status = 1 if a_listValues[1] == "Present" else 0
         cursorRegId = self.execute_query("Select registration_id "
-                                            "from registration "
-                                            "Where student_id = %s and schedule_id = %s",
-                                            [student_id, self.getRegistrationID([courseId, section, semester])])
+                                         "from registration "
+                                         "Where student_id = %s and schedule_id = %s",
+                                         [student_id, self.getRegistrationID([courseId, section, semester])])
         result = cursorRegId.fetchone()
         self.commit_and_close(cursorRegId)
         if result is not None:
@@ -1096,9 +1242,9 @@ class Ui_MainWindow(object):
         # Updates an existing attendance in the database
         student_id = a_listValues[0]
         cursorRegId = self.execute_query("Select student_id "
-                                            "from attendance natural join registration "
-                                            "Where attendance_id = %s ",
-                                            [attendance_id])
+                                         "from attendance natural join registration "
+                                         "Where attendance_id = %s ",
+                                         [attendance_id])
         result = cursorRegId.fetchone()
         self.commit_and_close(cursorRegId)
         if int(result[0]) != int(student_id):
@@ -1106,10 +1252,11 @@ class Ui_MainWindow(object):
         else:
             status = 1 if a_listValues[1] == "Present" else 0
             cursor = self.execute_query("Update attendance "
-                                          "Set status = %s "
-                                         "Where attendance_id = %s ",
+                                        "Set status = %s "
+                                        "Where attendance_id = %s ",
                                         [status, attendance_id])
             self.commit_and_close(cursor)
+
     def deleteAttendance(self, a_ID):
         # Deletes an attendance from the database
         cursor = self.execute_query("Delete from attendance Where attendance_ID = %s", [a_ID])
@@ -1118,7 +1265,8 @@ class Ui_MainWindow(object):
     def matchInToRegistration(self, course_id, section, semester, date):
         cursor = self.execute_query(
             "Select student_id, registration_id From registration right join schedule on registration.schedule_id = schedule.schedule_id "
-            "where schedule.course_id = %s and schedule.section = %s and schedule.semester = %s", [course_id, section, semester])
+            "where schedule.course_id = %s and schedule.section = %s and schedule.semester = %s",
+            [course_id, section, semester])
         data = []
         for (student_id, registration_id) in cursor:
             row = [student_id, registration_id, date]
@@ -1127,13 +1275,27 @@ class Ui_MainWindow(object):
         return data
 
     def refreshReports(self):
-        self.tblAttendance.setRowCount(0)
+        self.tblReports.setRowCount(0)
         self.setupComboboxSemester(self.cmbSemesterReports)
         self.setupComboboxCourse(self.cmbCourseReports)
         self.setupComboboxSection(self.cmbSectionReports)
+        course, section, semester, date = self.getCurrentReports()
+        cursor = self.execute_query(
+            "Select student_first_name, student_last_name, attendance_date, status "
+            "from registration right join attendance on registration.registration_id = attendance.registration_id "
+            "natural join student "
+            "natural join schedule "
+            "where semester = %s and course_id = %s and section = %s and attendance_date = %s",
+            [semester, course, section, date])
 
-
-
+        for (student_first_name, student_last_name, attendance_date, status) in cursor:
+            rowCount = self.tblReports.rowCount()
+            self.tblReports.insertRow(rowCount)
+            self.tblReports.setItem(rowCount, 0, QTableWidgetItem(str(student_first_name)))
+            self.tblReports.setItem(rowCount, 1, QTableWidgetItem(str(student_last_name)))
+            self.tblReports.setItem(rowCount, 2, QTableWidgetItem(str(attendance_date)))
+            self.tblReports.setItem(rowCount, 3, QTableWidgetItem("Present" if status == 1 else "Absent"))
+        self.commit_and_close(cursor)
 
     def setupComboboxSemester(self, cmbSemester):
         semesters = ["23SU", "23FA", "24SP", "24SU", "24FA", "25SP", "25SU", "25FA"]
@@ -1151,7 +1313,6 @@ class Ui_MainWindow(object):
 
     def setupComboboxSection(self, cmbSection):
 
-
         course = self.cmbCourseAttendance.currentText()
         index = 0 if cmbSection.currentIndex() == -1 else cmbSection.currentIndex()
         cmbSection.blockSignals(True)
@@ -1164,11 +1325,6 @@ class Ui_MainWindow(object):
         self.commit_and_close(cursor)
         cmbSection.setCurrentIndex(index)
         cmbSection.blockSignals(False)
-
-
-
-
-
 
 
 if __name__ == "__main__":
