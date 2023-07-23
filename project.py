@@ -457,11 +457,11 @@ class Ui_MainWindow(object):
         item = self.tblAttendance.horizontalHeaderItem(2)
         item.setText(_translate("MainWindow", "Last Name"))
         item = self.tblAttendance.horizontalHeaderItem(3)
-        item.setText(_translate("MainWindow", "Semester"))
+        item.setText(_translate("MainWindow", "Section"))
         item = self.tblAttendance.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "Course ID"))
         item = self.tblAttendance.horizontalHeaderItem(5)
-        item.setText(_translate("MainWindow", "Section"))
+        item.setText(_translate("MainWindow", "Semester"))
         item = self.tblAttendance.horizontalHeaderItem(6)
         item.setText(_translate("MainWindow", "Date"))
         item = self.tblAttendance.horizontalHeaderItem(7)
@@ -729,7 +729,7 @@ class Ui_MainWindow(object):
         answer = QMessageBox.question(
             None,
             "Delete row?",
-            "Are you sure you want to delete this row?",
+            "Are you sure you want to delete all?",
             QMessageBox.StandardButton.Yes |
             QMessageBox.StandardButton.No
         )
@@ -766,6 +766,10 @@ class Ui_MainWindow(object):
         registrationId = data[0][0]
         courseName = self.getCourseName(courseId)
         totalStudents = self.getTotalStudents(registrationId)
+        if totalStudents == 0:
+            QMessageBox.warning(None, "No students registered",
+                                "This course has no students registered.")
+            return
         attendedStudents = self.getAttendedStudents(courseId, section, semester, date)
         percentage = (attendedStudents / totalStudents) * 100
 
@@ -806,17 +810,26 @@ class Ui_MainWindow(object):
     # Regular attendance often correlates with better understanding of the course material and higher grades.
     def btnStudentAttendance_clicked(self):
         self.tblReports.setRowCount(0)
-        
-        
-        
+
         self.tblReports.setColumnCount(3)
         self.tblReports.setHorizontalHeaderLabels(("Student First Name", "Student Last Name", "% of Attended"))
 
-        cursor = self.execute_query("Select * from student")
-        dataStduents = cursor.fetchall()
-        for student in dataStduents:
+        courseId = self.cmbCourseReports.currentText()
+        section = self.cmbSectionReports.currentText()
+        semester = self.cmbSemesterReports.currentText()
+
+        cursor = self.execute_query(
+            "SELECT student.* FROM student "
+            "INNER JOIN registration ON student.student_id = registration.student_id "
+            "NATURAL JOIN schedule "
+            "NATURAL JOIN course "
+            "WHERE schedule.course_id = %s AND schedule.section = %s AND schedule.semester = %s",
+            [courseId, section, semester]
+        )
+        dataStudents = cursor.fetchall()
+        for student in dataStudents:
             row = self.tblReports.rowCount()
-            percentage = self.getPercantageOfParticularStudent(student[0])
+            percentage = self.getPercentageOfParticularStudentInCourse(student[0], courseId, section, semester)
             self.tblReports.insertRow(row)
             self.tblReports.setItem(row, 0, QtWidgets.QTableWidgetItem(student[1]))
             self.tblReports.setItem(row, 1, QtWidgets.QTableWidgetItem(student[2]))
@@ -853,6 +866,21 @@ class Ui_MainWindow(object):
             "WHERE student_id = %s AND status = '1' ",
             (student_id, student_id,))
         return cursor.fetchone()[0]
+
+    def getPercentageOfParticularStudentInCourse(self, student_id, course_id, section, semester):
+        cursor = self.execute_query(
+            "SELECT 100 * COUNT(*) / (SELECT COUNT(*) FROM registration "
+            "RIGHT JOIN attendance ON registration.registration_id = attendance.registration_id "
+            "natural join student "
+            "natural join schedule "
+            "WHERE student_id = %s AND schedule.course_id = %s AND schedule.section = %s AND schedule.semester = %s) "
+            "FROM registration RIGHT JOIN attendance ON registration.registration_id = attendance.registration_id "
+            "natural join student "
+            "natural join schedule "
+            "WHERE student_id = %s AND status = '1' AND schedule.course_id = %s AND schedule.section = %s AND schedule.semester = %s",
+            (student_id, course_id, section, semester, student_id, course_id, section, semester,))
+        return cursor.fetchone()[0]
+
     def openDialog(self, dialogClass, listValues):
         Dialog = QtWidgets.QDialog()
         form = dialogClass.Ui_Dialog()
@@ -1353,6 +1381,9 @@ class Ui_MainWindow(object):
 
     def refreshReports(self):
         self.tblReports.setRowCount(0)
+        self.tblReports.setColumnCount(4)
+        self.tblReports.setHorizontalHeaderLabels(("Student First Name", "Student Last Name", "Date", "Status"))
+
         self.setupComboboxSemester(self.cmbSemesterReports)
         self.setupComboboxCourse(self.cmbSemesterReports, self.cmbCourseReports)
         self.setupComboboxSection(self.cmbCourseReports, self.cmbSectionReports)
