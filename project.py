@@ -546,6 +546,8 @@ class Ui_MainWindow(object):
     def btnEditStudent_clicked(self):
         self.editRow(student, self.tblStudent, self.updateStudent, self.refreshStudent)
         self.refreshRegistration()
+        self.refreshAttendance()
+        self.refreshReports()
 
     def btnDeleteStudent_clicked(self):
         self.deleteRow(self.tblStudent, self.deleteStudent, self.refreshStudent)
@@ -557,10 +559,16 @@ class Ui_MainWindow(object):
             self.insertCourse(listValues)
             self.refreshCourse()
             self.refreshSchedule()
+            self.refreshRegistration()
+            self.refreshAttendance()
+            self.refreshReports()
 
     def btnEditCourse_clicked(self):
         self.editRow(course, self.tblCourse, self.updateCourse, self.refreshCourse)
+        self.refreshSchedule()
         self.refreshRegistration()
+        self.refreshAttendance()
+        self.refreshReports()
 
     def btnDeleteCourse_clicked(self):
         self.deleteRow(self.tblCourse, self.deleteCourse, self.refreshCourse)
@@ -575,6 +583,7 @@ class Ui_MainWindow(object):
 
     def btnEditInstructor_clicked(self):
         self.editRow(instructor, self.tblInstructor, self.updateInstructor, self.refreshInstructor)
+        self.refreshSchedule()
 
     def btnDeleteInstructor_clicked(self):
         self.deleteRow(self.tblInstructor, self.deleteInstructor, self.refreshInstructor)
@@ -585,6 +594,9 @@ class Ui_MainWindow(object):
         if listValues is not None:
             self.insertSchedule(listValues)
             self.refreshSchedule()
+            self.refreshRegistration()
+            self.refreshAttendance()
+            self.refreshReports()
 
     def btnEditSchedule_clicked(self):
         currentRow = self.tblSchedule.currentRow()
@@ -605,6 +617,8 @@ class Ui_MainWindow(object):
             self.updateSchedule(listValues, schedule_id)
             self.refreshSchedule()
             self.refreshRegistration()
+            self.refreshAttendance()
+            self.refreshReports()
 
     def btnDeleteSchedule_clicked(self):
         self.deleteRow(self.tblSchedule, self.deleteSchedule, self.refreshSchedule)
@@ -615,6 +629,8 @@ class Ui_MainWindow(object):
         if listValues is not None:
             self.insertRegistration(listValues)
             self.refreshRegistration()
+            self.refreshAttendance()
+            self.refreshReports()
 
     def btnEditRegistration_clicked(self):
         currentRow = self.tblRegistration.currentRow()
@@ -634,6 +650,8 @@ class Ui_MainWindow(object):
         if listValues is not None:
             self.updateRegistration(listValues, registration_id)
             self.refreshRegistration()
+            self.refreshAttendance()
+            self.refreshReports()
 
     def btnDeleteRegistration_clicked(self):
         self.deleteRow(self.tblRegistration, self.deleteRegistration, self.refreshRegistration)
@@ -909,7 +927,7 @@ class Ui_MainWindow(object):
     def connect(self):
         # Connects to the database
         self.cnx = mysql.connector.connect(user="root",
-                                           password="222488842dahy",
+                                           password="ljt916159807",
                                            host="127.0.0.1",
                                            database="mydb")
 
@@ -943,6 +961,10 @@ class Ui_MainWindow(object):
 
     def insertStudent(self, a_listValues):
         # Inserts a new student into the database
+        if a_listValues[0].strip() == '' or a_listValues[1].strip() == '':
+            QMessageBox.warning(None, "Cannot Add",
+                                "Both Student ID and First Name are required.")
+            return
         cursor = self.execute_query(
             "Insert Into student (student_id, student_first_name, student_last_name, student_email) "
             "Values (%s, %s, %s, %s)", (a_listValues[0], a_listValues[1], a_listValues[2], a_listValues[3]))
@@ -959,7 +981,15 @@ class Ui_MainWindow(object):
 
     def deleteStudent(self, a_ID):
         # Deletes a student from the database
-        # TODO: make sure student in other tables could not be deleted
+        # make sure course in other tables could not be deleted
+        cursor = self.execute_query("Select * from registration Where student_id = %s", [a_ID])
+        result = cursor.fetchone()
+
+        if result is not None:
+            QMessageBox.warning(None, "Cannot Delete",
+                                "This student has registration information and cannot be deleted.")
+            cursor.fetchall()
+            return
         cursor = self.execute_query("Delete from student Where student_ID = %s", [a_ID])
         self.commit_and_close(cursor)
 
@@ -980,6 +1010,10 @@ class Ui_MainWindow(object):
 
     def insertCourse(self, a_listValues):
         # Inserts a new course into the database
+        if a_listValues[0].strip() == '' or a_listValues[1].strip() == '':
+            QMessageBox.warning(None, "Cannot Add",
+                                "Both Course ID and Course Title are required.")
+            return
         cursor = self.execute_query("Insert Into course (course_id, course_title) "
                                     "Values (%s, %s)", (a_listValues[0], a_listValues[1]))
         self.commit_and_close(cursor)
@@ -994,7 +1028,15 @@ class Ui_MainWindow(object):
 
     def deleteCourse(self, a_ID):
         # Deletes a course from the database
-        # TODO: make sure course in other tables could not be deleted
+        # make sure course in other tables could not be deleted
+        cursor = self.execute_query("Select * from schedule Where course_id = %s", [a_ID])
+        result = cursor.fetchone()
+
+        if result is not None:
+            QMessageBox.warning(None, "Cannot Delete",
+                                "This course is already scheduled and cannot be deleted.")
+            cursor.fetchall()
+            return
         cursor = self.execute_query("Delete from course Where course_ID = %s", [a_ID])
         self.commit_and_close(cursor)
 
@@ -1014,6 +1056,10 @@ class Ui_MainWindow(object):
 
     def insertInstructor(self, a_listValues):
         # Inserts a new instructor into the database
+        if a_listValues[0].strip() == '' or a_listValues[1].strip() == '':
+            QMessageBox.warning(None, "Cannot Add",
+                                "Both Instructor ID and Instructor Name are required.")
+            return
         cursor = self.execute_query("Insert Into instructor (instructor_id, instructor_name) "
                                     "Values (%s, %s)", (a_listValues[0], a_listValues[1]))
         self.commit_and_close(cursor)
@@ -1028,7 +1074,15 @@ class Ui_MainWindow(object):
 
     def deleteInstructor(self, a_ID):
         # Deletes a instructor from the database
-        # TODO: make sure instructor in other tables could not be deleted
+        # make sure instructor in other tables could not be deleted
+        cursor = self.execute_query("Select * from schedule Where instructor_id = %s", [a_ID])
+        result = cursor.fetchone()
+
+        if result is not None:
+            QMessageBox.warning(None, "Cannot Delete",
+                                "This instructor has schedules and cannot be deleted.")
+            cursor.fetchall()
+            return
         cursor = self.execute_query("Delete from instructor Where instructor_ID = %s", [a_ID])
         self.commit_and_close(cursor)
 
@@ -1057,6 +1111,10 @@ class Ui_MainWindow(object):
 
     def insertSchedule(self, a_listValues):
         # Inserts a new schedule into the database
+        if a_listValues[2].strip() == '':
+            QMessageBox.warning(None, "Cannot Add",
+                                "Section is required.")
+            return
         instructor_id = self.getInstructorID(a_listValues)
         cursor = self.execute_query(
             "Insert Into schedule (instructor_id, course_id, section, semester) "
@@ -1085,6 +1143,15 @@ class Ui_MainWindow(object):
 
     def deleteSchedule(self, a_ID):
         # Deletes a schedule from the database
+        # make sure schedule in other tables could not be deleted
+        cursor = self.execute_query("Select * from registration Where schedule_id = %s", [a_ID])
+        result = cursor.fetchone()
+
+        if result is not None:
+            QMessageBox.warning(None, "Cannot Delete",
+                                "This schedule already has registration information and cannot be deleted.")
+            cursor.fetchall()
+            return
         cursor = self.execute_query("Delete from schedule Where schedule_ID = %s", [a_ID])
         self.commit_and_close(cursor)
 
@@ -1137,15 +1204,16 @@ class Ui_MainWindow(object):
         return None
 
     def getScheduleID(self, a_listValues):
-        # Returns the ID of a schedule based on its course ID, section, and semester
-        course_id = a_listValues[0]
-        section = a_listValues[1]
-        semester = a_listValues[2]
+        # Returns the ID of a schedule based on its name
+        parts = a_listValues.split(' - ')
+        semester = parts[0]
+        course_id = parts[1]
+        section = parts[2]
 
         cursor = self.execute_query("Select schedule_id "
                                     "from schedule "
-                                    "Where course_id = %s and section = %s and semester = %s",
-                                    [course_id, section, semester])
+                                    "Where semester = %s and course_id = %s and section = %s",
+                                    [semester, course_id, section])
         result = cursor.fetchone()
         self.commit_and_close(cursor)
 
@@ -1166,6 +1234,15 @@ class Ui_MainWindow(object):
 
     def deleteRegistration(self, a_ID):
         # Deletes a registration from the database
+        # make sure registration in other tables could not be deleted
+        cursor = self.execute_query("Select * from attendance Where registration_id = %s", [a_ID])
+        result = cursor.fetchone()
+
+        if result is not None:
+            QMessageBox.warning(None, "Cannot Delete",
+                                "This registration already has attendance information and cannot be deleted.")
+            cursor.fetchall()
+            return
         cursor = self.execute_query("Delete from registration Where registration_ID = %s", [a_ID])
         self.commit_and_close(cursor)
 
@@ -1173,8 +1250,8 @@ class Ui_MainWindow(object):
         # Refreshes the attendance view by clearing the table and inserting the new data
         self.tblAttendance.setRowCount(0)
         self.setupComboboxSemester(self.cmbSemesterAttendance)
-        self.setupComboboxCourse(self.cmbCourseAttendance)
-        self.setupComboboxSection(self.cmbSectionAttendance)
+        self.setupComboboxCourse(self.cmbSemesterAttendance, self.cmbCourseAttendance)
+        self.setupComboboxSection(self.cmbCourseAttendance, self.cmbSectionAttendance)
         course, section, semester, date = self.getCurrentAttendance()
         cursor = self.execute_query(
             "Select attendance_id, student_first_name, student_last_name, semester, course_id, section, attendance_date, status "
@@ -1277,8 +1354,8 @@ class Ui_MainWindow(object):
     def refreshReports(self):
         self.tblReports.setRowCount(0)
         self.setupComboboxSemester(self.cmbSemesterReports)
-        self.setupComboboxCourse(self.cmbCourseReports)
-        self.setupComboboxSection(self.cmbSectionReports)
+        self.setupComboboxCourse(self.cmbSemesterReports, self.cmbCourseReports)
+        self.setupComboboxSection(self.cmbCourseReports, self.cmbSectionReports)
         course, section, semester, date = self.getCurrentReports()
         cursor = self.execute_query(
             "Select student_first_name, student_last_name, attendance_date, status "
@@ -1303,17 +1380,22 @@ class Ui_MainWindow(object):
             if cmbSemester.findText(semester) == -1:  # item not found in combobox
                 cmbSemester.addItem(semester)
 
-    def setupComboboxCourse(self, cmbCourse):
-        cursor = self.execute_query("Select course_id From course")
+    def setupComboboxCourse(self, cmbSemester, cmbCourse):
+        semester = cmbSemester.currentText()
+        index = 0 if cmbCourse.currentIndex() == -1 else cmbCourse.currentIndex()
+        cmbCourse.blockSignals(True)
+        # Clear the combobox to avoid irrelevant sections
+        cmbCourse.clear()
+        cursor = self.execute_query("Select course_id From schedule Where semester = %s", [semester])
         for (course_id,) in cursor:
             course_str = str(course_id)
             if cmbCourse.findText(course_str) == -1:  # item not found in combobox
                 cmbCourse.addItem(course_str)
         self.commit_and_close(cursor)
+        cmbCourse.setCurrentIndex(index)
 
-    def setupComboboxSection(self, cmbSection):
-
-        course = self.cmbCourseAttendance.currentText()
+    def setupComboboxSection(self, cmbCourse, cmbSection):
+        course = cmbCourse.currentText()
         index = 0 if cmbSection.currentIndex() == -1 else cmbSection.currentIndex()
         cmbSection.blockSignals(True)
         # Clear the combobox to avoid irrelevant sections
