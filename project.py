@@ -955,7 +955,7 @@ class Ui_MainWindow(object):
     def connect(self):
         # Connects to the database
         self.cnx = mysql.connector.connect(user="root",
-                                           password="ljt916159807",
+                                           password="222488842dahy",
                                            host="127.0.0.1",
                                            database="mydb")
 
@@ -1417,13 +1417,14 @@ class Ui_MainWindow(object):
         cmbCourse.blockSignals(True)
         # Clear the combobox to avoid irrelevant sections
         cmbCourse.clear()
-        cursor = self.execute_query("Select course_id From schedule Where semester = %s", [semester])
+        cursor = self.execute_query("Select course_id From schedule Where semester = %s order by course_id", [semester])
         for (course_id,) in cursor:
             course_str = str(course_id)
-            if cmbCourse.findText(course_str) == -1:  # item not found in combobox
-                cmbCourse.addItem(course_str)
+            cmbCourse.addItem(course_str)
         self.commit_and_close(cursor)
         cmbCourse.setCurrentIndex(index)
+        cmbCourse.blockSignals(False)
+
 
     def setupComboboxSection(self, cmbCourse, cmbSection):
         course = cmbCourse.currentText()
